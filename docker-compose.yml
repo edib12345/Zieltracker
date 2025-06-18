@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    container_name: zieltracker-backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/zieltracker
+
+  frontend:
+    build: ./frontend
+    container_name: zieltracker-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:14
+    container_name: zieltracker-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: zieltracker
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  grafana:
+    image: grafana/grafana
+    container_name: zieltracker-grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - db
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  db-data:
+  grafana-data:
+
