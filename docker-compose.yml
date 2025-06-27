@@ -11,7 +11,7 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/zieltracker
 
   frontend:
-    build: ./frontend
+    build: ./frontend   # Wenn Ordner "zieltracker-frontend" heisst: ./zieltracker-frontend
     container_name: zieltracker-frontend
     ports:
       - "3000:3000"
@@ -26,10 +26,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: zieltracker
-
     ports:
       - "5432:5432"
-
     volumes:
       - db-data:/var/lib/postgresql/data
 

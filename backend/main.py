@@ -1,3 +1,4 @@
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
@@ -19,11 +20,11 @@ Base = declarative_base()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT-Konfiguration
-SECRET_KEY = "dein_geheimer_schlüssel"
+SECRET_KEY = "dein_geheimer_schluessel"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Datenbankmodelle
 class UserModel(Base):
@@ -70,7 +71,6 @@ class GoalUpdate(BaseModel):
     title: Optional[str] = None
     progress: Optional[int] = Field(None, ge=0, le=100)
 
-# FastAPI-App
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -129,13 +129,17 @@ def register(user: UserCreate):
     db.close()
     return User(id=db_user.id, username=db_user.username)
 
-@app.post("/login", response_model=Token)
-def login(user: UserCreate):
+
+@app.post("/token", response_model=Token)
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
     db = SessionLocal()
-    auth_user = authenticate_user(db, user.username, user.password)
+    auth_user = authenticate_user(db, form_data.username, form_data.password)
     if not auth_user:
         raise HTTPException(status_code=400, detail="Falscher Benutzername oder Passwort")
-    token = create_access_token(data={"sub": auth_user.username}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    token = create_access_token(
+        data={"sub": auth_user.username},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     return {"access_token": token, "token_type": "bearer"}
 
 @app.get("/goals", response_model=List[Goal])
